@@ -12,10 +12,19 @@ window.createLifecycleUI = function (ui) {
   function active() { return screens.has(state.menu); }
   function open() { flow=null;archiveId=null;enter('service');show('Состояние и забота · A/B/C'); }
   function selectedArchive() { return pet().archives.find(a=>a.lifeId===archiveId); }
+  function location() {
+    const names={'service':'Сервис','life-status':'Состояние','generations':'Поколения','archive':'Архив','new-collection':'Новая жизнь · коллекция','reset-confirm':'Сброс коллекции?','new-mode':'Новая жизнь · режим','classic-confirm':'Классический режим?','new-backup':'Резервная копия','new-confirm':'Новое яйцо?','pause-confirm':'Пауза жизни?','archive-delete':'Удалить запись?'};
+    return names[state.menu] || 'Уход';
+  }
+  function medicineOption(p) {
+    const b=p.biology;
+    const reason=b.lifeState==='egg'?'Сначала вылупись':b.lifeState==='grave'?'Жизнь завершена':b.paused?'Жизнь на паузе':p.sleeping?'Сначала разбуди':!b.illness?'Семира не болеет':b.medicineCooldownMs>0?'Доза через '+Math.ceil(b.medicineCooldownMs/60000)+' мин':'';
+    return {...item('medicine','Лекарство'),disabled:!!reason,hint:reason||'Бесплатно · здоровье +20'};
+  }
   function list() {
     const p=pet();
     switch(state.menu) {
-      case 'service': return [item('status','Состояние'),item('medicine','Лекарство'),item('pause',p.biology.paused?'Продолжить жизнь':'Пауза жизни'),item('generations','Поколения'),item('back','Назад')];
+      case 'service': return [item('status','Состояние'),medicineOption(p),item('pause',p.biology.paused?'Продолжить жизнь':'Пауза жизни'),item('generations','Поколения'),item('back','Назад')];
       case 'life-status': return [item('status-next','Следующая страница'),item('back','Назад')];
       case 'generations': return [item('new','Новое яйцо'),...p.archives.map((a,i)=>item('archive:'+a.lifeId,'Поколение '+(a.biology?.generation||i+1))),item('export','Скачать весь архив'),item('back','Назад')];
       case 'archive': return [item('export','Скачать всё'),item('delete','Удалить запись'),item('back','Назад')];
@@ -44,6 +53,7 @@ window.createLifecycleUI = function (ui) {
     if(id==='status'){enter('life-status');return;}
     if(id==='status-next'){page=(page+1)%3;ui.refresh();return;}
     if(id==='medicine'){
+      const option=medicineOption(p);if(option.disabled){show(option.hint);return;}
       const r=command('medicine',{});if(r.ok)show('Лекарство помогло. Проверь еду и сон.');return;
     }
     if(id==='pause'){if(p.biology.paused){if(command('resume',{}).ok){ui.home();show('Жизнь продолжается.');}}else enter('pause-confirm');return;}
@@ -75,7 +85,7 @@ window.createLifecycleUI = function (ui) {
   function specialPress(which) {
     const p=pet();
     if(active()){
-      const choices=list();if(which===2)back();else if(which===0){state.selected=(state.selected+1)%choices.length;ui.refresh();}else if(choices[state.selected])select(choices[state.selected].id);return true;
+      const choices=list();if(which===2)back();else if(which===0){notice='';state.selected=(state.selected+1)%choices.length;ui.refresh();}else if(choices[state.selected])select(choices[state.selected].id);return true;
     }
     if(state.menu!=='home')return false;
     if(p.biology.lifeState==='grave'){if(which===1)enter('generations');return true;}
@@ -116,7 +126,8 @@ window.createLifecycleUI = function (ui) {
       }
       const choices=list(),perPage=state.menu==='life-status'||state.menu==='archive'?2:detail?3:5;
       const start=Math.floor(state.selected/perPage)*perPage,y0=state.menu==='life-status'?143:state.menu==='archive'?125:detail?100:52;
-      choices.slice(start,start+perPage).forEach((o,i)=>{const y=y0+i*22,on=start+i===state.selected;if(on)rect(8,y-3,224,20,'#69465f');text((on?'› ':'  ')+o.label,12,y,10,on?'#fff0fa':'#cbb5d0');});
+      choices.slice(start,start+perPage).forEach((o,i)=>{const y=y0+i*22,on=start+i===state.selected;if(on)rect(8,y-3,224,20,'#69465f');text((on?'› ':'  ')+o.label,12,y,10,o.disabled?'#c0aabd':on?'#fff0fa':'#cbb5d0');});
+      if(state.menu==='service'&&choices[state.selected]?.hint)text(choices[state.selected].hint,12,170,9,'#f0cbe2');
       if(choices.length>perPage)text((start+1)+'–'+Math.min(start+perPage,choices.length)+' / '+choices.length,231,177,8,'#cbb5d0','right');
     }else if(b.lifeState==='egg'){
       text('МАЛЕНЬКАЯ НОВАЯ ЖИЗНЬ',120,34,11,'#efb7d8','center');
@@ -141,5 +152,5 @@ window.createLifecycleUI = function (ui) {
   function acknowledgeCritical() {
     const p=pet();if(criticalDrawn&&p.biology.criticalPending&&!p.biology.criticalSeen&&document.visibilityState==='visible'&&!window.TamaDrawer?.isOpen())ui.act('critical-seen',{visible:true,drawer:false});
   }
-  return {active,list,open,back,select,specialPress,draw,overlay,acknowledgeCritical,show};
+  return {active,list,location,open,back,select,specialPress,draw,overlay,acknowledgeCritical,show};
 };
