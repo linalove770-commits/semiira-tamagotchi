@@ -1,0 +1,14 @@
+/* Lifecycle UI: storage warning outside the hidden drawer, critical LCD frame accent.
+   The LCD itself is canvas-drawn in app.js; this file only styles DOM companions.
+   Geometry/header untouched: no layout overrides here. */
+#storage-warn{max-width:510px;margin:8px auto;padding:10px 12px;border:1px solid #e08aa8;border-radius:10px;background:#4a2030;color:#ffd9e6;font-size:12px;line-height:1.6}
+.lifecycle-summary{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;margin:10px 0;padding:9px 11px;border:1px solid #a9789438;border-radius:10px;background:#24182d;color:#d8bfd4;font-size:11px}.lifecycle-summary strong,.lifecycle-summary small{grid-column:1/-1}.lifecycle-summary strong{color:#f3c5dc;font-size:12px}.lifecycle-summary small{color:#c895ad}body[data-warning="critical"] .lifecycle-summary{border-color:#ff729e;background:#4a2030}body[data-lifecycle="egg"] .lifecycle-summary strong{color:#f6d88e}body[data-lifecycle="grave"] .lifecycle-summary{opacity:.8}#lifecycle-panel{display:block}
+#storage-warn[hidden]{display:none!important}
+#storage-warn button{margin-left:8px;font-size:11px;padding:6px 10px}
+body[data-lifecycle="critical"] #stage{outline:2px solid #ff7fae;outline-offset:4px;border-radius:12px}.device-first .lifecycle-summary{display:none!important}body[data-fallback="true"] .device-first .lifecycle-summary{display:grid!important}body[data-fallback="true"] .control-side .activity{display:none!important}body[data-fallback="true"] .control-side .controls{display:flex!important}
+body[data-lifecycle="egg"] #menu-location{color:#f6d88e}
+body[data-lifecycle="grave"] #menu-location{color:#a9a3c7}
+@media(max-width:850px){#storage-warn{margin:9px 8px 0;font-size:11px}}
+
+/* Fallback keeps device-first: lifecycle summary joins the visible companion column. */
+body[data-fallback=true] .lifecycle-summary{display:grid!important}
